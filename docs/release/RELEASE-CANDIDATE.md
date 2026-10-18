@@ -1,17 +1,23 @@
+<!--
+Authors: LCC Research Lab
+Project: From Document to Evidence
+-->
+
 # AI Model Inspector release candidate
 
 Release candidate: 1.0.0
-Private source commit: f8a596a364a676f8a8933bb6e4d8ddf1520b59e7
-Public distribution commit: the initial commit of the public snapshot
-Distribution branch: distribution/v1.0
+Status: not tagged and not published
+Pre-release checkpoint: `ccad4c7247c9f6a489f56193a68120913bddbaa1`
 
-Scientific validation, recorded in inspector-engine/research/freshman_validation.json:
+This file describes the public source distribution. The operative license is the root `LICENSE`: Apache License, Version 2.0, copyright 2026 LCC Research Lab.
+
+Scientific validation is recorded in `inspector-engine/research/freshman_validation.json`:
 
 - Freshman F5-1
 - Freshman F5-2
 - Freshman F5-3
 - Freshman F6
 
-Measurement engine: frozen algorithms unchanged. weight_statistics.py and effective_lora.py are the same bytes as the private source commit.
+The measurement formulas in `weight_statistics.py` and `effective_lora.py` are unchanged. The validation record lists the published checkpoint hashes and measurement values. Packaged adapter settings use the relative base path `../BASE`. This distribution does not include model weights. A Safetensors file supplied by the user can be inspected when it is in a configured directory.
 
-The original research configuration files and checkpoint weights remain in the private archive. This candidate ships the validation numbers, the relative packaged adapter configurations, and the source required to inspect a Safetensors file the user supplies.
+`v1.0.0` has not been tagged. This repository has not been published.
