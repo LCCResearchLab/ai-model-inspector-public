@@ -1,0 +1,73 @@
+{
+  "study": "book-three-freshman",
+  "base_model": "SmolLM2-1.7B-Instruct",
+  "base_model_record": "HuggingFaceTB/SmolLM2-1.7B-Instruct",
+  "record": "Book Three Chapter 4 pre-execution verification and Chapter 2 artifact verification",
+  "limits": "This registry identifies saved files. The weight SHA-256 is the research fingerprint of the tensor file. original_config_sha256 is the research configuration, and the packaged configuration is hashed separately. A base-model path is not evidence that the base weights are present. This registry does not reconstruct a trained student from base weights and a LoRA adapter.",
+  "subjects": [
+    {
+      "id": "BASE",
+      "experiment": "Starting model",
+      "experiment_role": "Common starting point, before the Book Two lessons",
+      "unit_id": null,
+      "seed": null,
+      "epoch": null,
+      "artifact_type": "base_weights",
+      "relative_path": "BASE/model.safetensors",
+      "expected_sha256": "f55217be716b6a997b97b9d8d7eb6fad02e00858f5010ec24f64603c3a98a0e8",
+      "full_student_checkpoint": "not_applicable"
+    },
+    {
+      "id": "F5-1",
+      "experiment": "Book Two, Chapter 5 — After the Lesson Is Gone",
+      "experiment_role": "First Method training run",
+      "unit_id": "CH5|Freshman|method|22001001|3",
+      "seed": 22001001,
+      "epoch": 3,
+      "artifact_type": "lora_adapter",
+      "relative_path": "F5-1/adapter_model.safetensors",
+      "expected_sha256": "001ff8f0f87e37cb7e5302d34ddd30e89972908e979d20f57f28f66b6e5308c2",
+      "original_config_sha256": "4c0458bd62505ad14dfb45a24f822b761f986444edbfc2e7a793ea77d0b5244b",
+      "full_student_checkpoint": "not_saved"
+    },
+    {
+      "id": "F5-2",
+      "experiment": "Book Two, Chapter 5 — After the Lesson Is Gone",
+      "experiment_role": "Second Method run, different seed",
+      "unit_id": "CH5|Freshman|method|22001002|3",
+      "seed": 22001002,
+      "epoch": 3,
+      "artifact_type": "lora_adapter",
+      "relative_path": "F5-2/adapter_model.safetensors",
+      "expected_sha256": "85dcdf788472560ada6c668b04d3688561297ec36f1c117a0545a45ded8df934",
+      "original_config_sha256": "f2584e96d675040c9a2fe8076611a4de5342654a699b97fdf74b54dbfe72456a",
+      "full_student_checkpoint": "not_saved"
+    },
+    {
+      "id": "F5-3",
+      "experiment": "Book Two, Chapter 5 — After the Lesson Is Gone",
+      "experiment_role": "Third Method run, different seed",
+      "unit_id": "CH5|Freshman|method|22001003|3",
+      "seed": 22001003,
+      "epoch": 3,
+      "artifact_type": "lora_adapter",
+      "relative_path": "F5-3/adapter_model.safetensors",
+      "expected_sha256": "aea02701349110c4defa99ab679af505822e409407f32c07a76939f5e7cb5eac",
+      "original_config_sha256": "4c0458bd62505ad14dfb45a24f822b761f986444edbfc2e7a793ea77d0b5244b",
+      "full_student_checkpoint": "not_saved"
+    },
+    {
+      "id": "F6",
+      "experiment": "Book Two, Chapter 6 — Learning That Lasts",
+      "experiment_role": "The checkpoint that chapter selected",
+      "unit_id": "CH6|Freshman|LoRA_curriculum|12001002|3",
+      "seed": 12001002,
+      "epoch": 3,
+      "artifact_type": "lora_adapter",
+      "relative_path": "F6/adapter_model.safetensors",
+      "expected_sha256": "8aadbe3dd9fa497c93bf0e66061a5e588ae2d17ec0f0f88756fdf6216a3c9060",
+      "original_config_sha256": "38ed9bfb803f885724208e6aa52f20982bb477bad4f5e51039e36fcfcac2f99a",
+      "full_student_checkpoint": "not_saved"
+    }
+  ]
+}

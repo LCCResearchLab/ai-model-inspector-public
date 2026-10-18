@@ -1,0 +1,57 @@
+{
+  "record": "Book Three Freshman effective-update validation",
+  "measured_on": "2026-10-18",
+  "algorithm": "measure_freshman_effective and align_update_factors",
+  "tolerances": {
+    "norm_absolute": 5e-7,
+    "relative_absolute": 5e-7,
+    "cosine_absolute": 5e-9
+  },
+  "subjects": [
+    {
+      "id": "F5-1",
+      "weight_sha256": "001ff8f0f87e37cb7e5302d34ddd30e89972908e979d20f57f28f66b6e5308c2",
+      "rank": 16,
+      "lora_alpha": 32,
+      "scale": 2,
+      "pair_count": 96,
+      "effective_update_norm": 1.155947,
+      "relative_to_base": 0.000497
+    },
+    {
+      "id": "F5-2",
+      "weight_sha256": "85dcdf788472560ada6c668b04d3688561297ec36f1c117a0545a45ded8df934",
+      "rank": 16,
+      "lora_alpha": 32,
+      "scale": 2,
+      "pair_count": 96,
+      "effective_update_norm": 1.159056,
+      "relative_to_base": 0.000498
+    },
+    {
+      "id": "F5-3",
+      "weight_sha256": "aea02701349110c4defa99ab679af505822e409407f32c07a76939f5e7cb5eac",
+      "rank": 16,
+      "lora_alpha": 32,
+      "scale": 2,
+      "pair_count": 96,
+      "effective_update_norm": 1.154512,
+      "relative_to_base": 0.000496
+    },
+    {
+      "id": "F6",
+      "weight_sha256": "8aadbe3dd9fa497c93bf0e66061a5e588ae2d17ec0f0f88756fdf6216a3c9060",
+      "rank": 16,
+      "lora_alpha": 32,
+      "scale": 2,
+      "pair_count": 96,
+      "effective_update_norm": 9.970915,
+      "relative_to_base": 0.004285
+    }
+  ],
+  "chapter_five_cosines": [
+    {"left": "F5-1", "right": "F5-2", "cosine": 0.00820179, "mean_pair_cosine": 0.00817211},
+    {"left": "F5-1", "right": "F5-3", "cosine": 0.00877463, "mean_pair_cosine": 0.00875743},
+    {"left": "F5-2", "right": "F5-3", "cosine": 0.00931618, "mean_pair_cosine": 0.0093219}
+  ]
+}

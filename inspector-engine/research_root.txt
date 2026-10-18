@@ -1,0 +1,5 @@
+# Book Three artifacts packaged with AI Model Inspector.
+# Paths in research/book_three_freshman.json are resolved from here.
+# A relative path is resolved from inspector-engine/.
+# Another researcher can replace this line. INSPECTOR_RESEARCH_ROOT overrides it.
+distribution/book-three/freshman

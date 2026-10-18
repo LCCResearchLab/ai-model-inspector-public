@@ -1,0 +1,14 @@
+{
+  "title": "Qwen",
+  "repo": "book-three/qwen",
+  "revision": "23001001-epoch-3",
+  "card_url": null,
+  "downloaded_at": null,
+  "bundled": true,
+  "redistribution": "withheld",
+  "redistribution_note": "Not part of the public package until redistribution rights are confirmed. A local copy may be placed in this directory.",
+  "files": [
+    { "name": "adapter_model.safetensors" },
+    { "name": "adapter_config.json" }
+  ]
+}

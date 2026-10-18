@@ -1,0 +1,23 @@
+AI Model Inspector
+Copyright 2026 LCC Research Lab
+
+This product is licensed under the Apache License, Version 2.0.
+The license applies to the original source code in this distribution.
+It does not grant rights to third-party model weights.
+
+This distribution does not include Book Three checkpoint weights or the
+Qwen adapter. Those files have their own terms. SmolLM2-1.7B-Instruct,
+when obtained separately from its publisher, is published under the
+Apache License, Version 2.0.
+
+Third-party software used to build and run the Inspector:
+
+- FastAPI, MIT License
+- Uvicorn, BSD-3-Clause License
+- HTTPX, BSD-3-Clause License
+- NumPy, BSD-3-Clause License, with portions under 0BSD, MIT, Zlib, and CC0-1.0
+- pytest, MIT License
+- React and React DOM, MIT License
+- Vite and @vitejs/plugin-react, MIT License
+- TypeScript, Apache License, Version 2.0
+- caniuse-lite, CC-BY-4.0. Data is copyright caniuse and contributors.

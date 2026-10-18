@@ -1,0 +1,14 @@
+{
+  "title": "Freshman",
+  "repo": "book-three/freshman",
+  "revision": "20261101",
+  "card_url": null,
+  "downloaded_at": null,
+  "bundled": true,
+  "redistribution": "not_included",
+  "redistribution_note": "The Freshman adapter weights are not part of this package. The validation record lists their hashes and measurements. Place a local copy in this directory to inspect it.",
+  "files": [
+    { "name": "adapters.safetensors" },
+    { "name": "adapter_config.json" }
+  ]
+}
