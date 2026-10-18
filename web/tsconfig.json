@@ -14,5 +14,5 @@
     "noUnusedParameters": true
   },
   "include": ["src"],
-  "exclude": ["src/presentation.test.ts", "src/workProgress.test.ts"]
+  "exclude": ["src/presentation.test.ts", "src/publishedResults.test.ts", "src/workProgress.test.ts"]
 }

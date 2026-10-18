@@ -28,6 +28,19 @@ import {
 import { WorkProgress } from "./progress";
 import { weightStepLabel } from "./workProgress";
 import { RESEARCH_COLLECTIONS, collectionById, experimentTitle, studyLine, type ResearchCollection } from "./provenance";
+import {
+  BASE_RECORDED_NOTE,
+  BOOK_PAGES,
+  CHECKPOINT_MISSING,
+  QWEN_RECORDED_NOTE,
+  RECORDED_RESULTS_LABEL,
+  recordedDirectionView,
+  recordedMeasurementLines,
+  recordedPairLabel,
+  formatRecorded,
+  type PublishedCosine,
+  type PublishedResearch,
+} from "./publishedResults";
 import { go, type Route, type WorkspaceTab } from "./route";
 import { CheckpointInspector } from "./checkpointInspector";
 import { cachedInspection, rememberInspection } from "./inspectionCache";
@@ -49,6 +62,7 @@ function projectionName(label: string | number): string {
 export function BookConsole({ apiBase, route }: { apiBase: string; route: Route }) {
   const [limits, setLimits] = useState("");
   const [subjects, setSubjects] = useState<ResearchSubject[]>([]);
+  const [published, setPublished] = useState<PublishedResearch | null>(null);
   const [error, setError] = useState("");
   const [registryLoading, setRegistryLoading] = useState(true);
 
@@ -62,6 +76,7 @@ export function BookConsole({ apiBase, route }: { apiBase: string; route: Route 
         if (result.ok) {
           setLimits(result.limits);
           setSubjects(result.subjects);
+          setPublished(result.published);
           setError("");
         } else {
           setError(result.message);
@@ -87,6 +102,7 @@ export function BookConsole({ apiBase, route }: { apiBase: string; route: Route 
         <>
           <h1>Books</h1>
           <p className="lede">Books &amp; Research. Collections follow the experiments. The Model Library follows where a file came from.</p>
+          <p className="note">Published research results stay available when the checkpoint files are not on this computer. Inspect Local Checkpoint calculates a new measurement only when those files are present.</p>
           <p className="note">A later book is another research collection. It does not require a new section of the instrument.</p>
         </>
       ) : null}
@@ -94,20 +110,21 @@ export function BookConsole({ apiBase, route }: { apiBase: string; route: Route 
       {registryLoading && subjects.length === 0 && !error ? (
         <WorkProgress label="Checking the research files on this computer." />
       ) : null}
-      {onIndex ? <CollectionBrowser subjects={subjects} limits={limits} registryLoading={registryLoading} /> : null}
+      {onIndex ? <CollectionBrowser subjects={subjects} published={published} limits={limits} registryLoading={registryLoading} /> : null}
       {route.view === "workspace" && route.collection === "freshman" && workspaceSubject ? (
-        <FreshmanWorkspace apiBase={apiBase} subject={workspaceSubject} subjects={subjects} tab={route.tab} />
+        <FreshmanWorkspace apiBase={apiBase} subject={workspaceSubject} subjects={subjects} published={published} tab={route.tab} />
       ) : null}
       {route.view === "workspace" && route.collection === "freshman" && !workspaceSubject && !registryLoading ? (
         <p className="error">That research subject is not in Freshman Research.</p>
       ) : null}
       {route.view === "workspace" && route.collection === "qwen" ? <QwenResearch apiBase={apiBase} tab={route.tab} /> : null}
-      {route.view === "book" && route.section === "findings" && focus ? (
+      {route.view === "book" && route.section === "findings" ? (
         <>
           <p className="crumb">
             <button type="button" onClick={() => go("#/book")}>Books</button> / Research findings
           </p>
-          <WeightsPanel apiBase={apiBase} subject={focus} subjects={subjects} mode="findings" embedded />
+          <PublishedBookThree subjects={subjects} published={published} />
+          {focus ? <WeightsPanel apiBase={apiBase} subject={focus} subjects={subjects} mode="findings" embedded /> : null}
         </>
       ) : null}
     </>
@@ -136,23 +153,38 @@ function verificationLine(subject: ResearchSubject): string {
 
 function CollectionBrowser({
   subjects,
+  published,
   limits,
   registryLoading,
 }: {
   subjects: ResearchSubject[];
+  published: PublishedResearch | null;
   limits: string;
   registryLoading: boolean;
 }) {
   const qwen = collectionById("qwen");
+  const bookOne = BOOK_PAGES[0];
+  const bookTwo = BOOK_PAGES[1];
+  const bookThree = BOOK_PAGES[2];
   return (
     <>
+      <section className="card">
+        <h2>{bookOne.title}</h2>
+        <p className="note">{bookOne.note}</p>
+      </section>
+      <section className="card">
+        <h2>{bookTwo.title}</h2>
+        <p className="note">{bookTwo.note}</p>
+      </section>
       <details className="card collection" open>
-        <summary>Freshman Research</summary>
+        <summary>{bookThree.title}</summary>
+        <p className="meta">Freshman Research. {bookThree.note}</p>
         <p className="meta">BASE is the starting model. F5-1, F5-2, F5-3, and F6 are trained adapters from Book Two.</p>
         <p className="meta">{registryLoading ? "Checking the research files." : `${subjects.length} subjects.`}</p>
         <button type="button" className="quiet" onClick={() => go("#/book/findings")}>
           Research findings
         </button>
+        <PublishedBookThree subjects={subjects} published={published} />
         {limits ? (
           <details className="technical">
             <summary>Research limits</summary>
@@ -167,8 +199,8 @@ function CollectionBrowser({
               {subject.seed != null ? <p className="meta">Seed: {subject.seed} · Epoch: {subject.epoch}</p> : <p className="meta">Before the Chapter 5 and Chapter 6 lessons</p>}
               <p className="meta">{verificationLine(subject)}</p>
             </div>
-            <button type="button" disabled={!subject.inspectable} onClick={() => go(freshmanHash(subject.id, "overview"))}>
-              Inspect →
+            <button type="button" onClick={() => go(freshmanHash(subject.id, "overview"))}>
+              Open →
             </button>
           </div>
         ))}
@@ -245,11 +277,13 @@ function FreshmanWorkspace({
   apiBase,
   subject,
   subjects,
+  published,
   tab,
 }: {
   apiBase: string;
   subject: ResearchSubject;
   subjects: ResearchSubject[];
+  published: PublishedResearch | null;
   tab: WorkspaceTab;
 }) {
   const lines = [
@@ -266,9 +300,16 @@ function FreshmanWorkspace({
       tab={tab}
       hashes={(next) => freshmanHash(subject.id, next)}
     >
+      <RecordedResearchResults subject={subject} published={published} />
       {tab === "overview" ? <SubjectDetail subject={subject} /> : null}
-      {tab === "checkpoint" && subject.location ? <CheckpointPanel apiBase={apiBase} subject={subject} embedded /> : null}
-      {tab === "checkpoint" && !subject.location ? <p className="note">No checkpoint file is recorded for this subject.</p> : null}
+      {tab === "overview" ? <LocalCheckpointNotice subject={subject} /> : null}
+      {tab === "checkpoint" ? (
+        <section className="card">
+          <h3>Inspect Local Checkpoint</h3>
+          <p className="note">A measurement on this tab is newly calculated from a checkpoint on this computer. It is separate from the recorded research results.</p>
+          {subject.location ? <CheckpointPanel apiBase={apiBase} subject={subject} embedded /> : <p className="note">{CHECKPOINT_MISSING}</p>}
+        </section>
+      ) : null}
       {tab === "magnitudes" ? <WeightsPanel apiBase={apiBase} subject={subject} subjects={subjects} mode="magnitudes" embedded /> : null}
       {tab === "directions" ? (
         <>
@@ -277,6 +318,152 @@ function FreshmanWorkspace({
         </>
       ) : null}
     </WorkspaceFrame>
+  );
+}
+
+function LocalCheckpointNotice({ subject }: { subject: ResearchSubject }) {
+  return (
+    <section className="card">
+      <h3>Inspect Local Checkpoint</h3>
+      <p className="note">A measurement started here is newly calculated from a checkpoint on this computer. It is separate from the recorded research results.</p>
+      {subject.location ? (
+        <button type="button" onClick={() => go(freshmanHash(subject.id, "checkpoint"))}>Inspect →</button>
+      ) : (
+        <p className="note">{CHECKPOINT_MISSING}</p>
+      )}
+    </section>
+  );
+}
+
+function RecordedResearchResults({ subject, published }: { subject: ResearchSubject; published: PublishedResearch | null }) {
+  return (
+    <section className="card" data-testid="recorded-results">
+      <h3>{RECORDED_RESULTS_LABEL}</h3>
+      {!published ? <p className="note">The published measurement record was not returned.</p> : <RecordedSubjectBody subject={subject} published={published} />}
+    </section>
+  );
+}
+
+function RecordedSubjectBody({ subject, published }: { subject: ResearchSubject; published: PublishedResearch }) {
+  const row = published.subjects.find((item) => item.id === subject.id);
+  const directions = recordedDirectionView(subject.id, published.chapter_five_cosines);
+  return (
+    <>
+      <p className="note">These values are the published record ({published.record}, {published.measured_on}). They were not calculated from a file on this computer.</p>
+      {row ? (
+        <>
+          <div className="facts">
+            {recordedMeasurementLines(row).map((line) => (
+              <div key={line.testId} className={line.testId === "sha256" ? "wide" : undefined}>
+                <span>{line.label}</span>
+                <strong className={line.testId === "sha256" ? "hash" : undefined} data-testid={`recorded-${subject.id}-${line.testId}`}>{line.value}</strong>
+              </div>
+            ))}
+          </div>
+          <details className="technical">
+            <summary>What is the denominator?</summary>
+            <p className="limits">{MATCHING_BASE_PROJECTIONS_HELP}</p>
+          </details>
+        </>
+      ) : (
+        <>
+          <p className="note">{BASE_RECORDED_NOTE}</p>
+          <Field label="Weight SHA-256" value={subject.expected_sha256 || "not recorded"} />
+        </>
+      )}
+      <RecordedDirectionBlock directions={directions} />
+    </>
+  );
+}
+
+function RecordedDirectionBlock({ directions }: { directions: { rows: PublishedCosine[]; note: string | null } }) {
+  if (directions.rows.length === 0 && !directions.note) return null;
+  return (
+    <>
+      <h3>Recorded Chapter 5 direction comparisons</h3>
+      {directions.note ? <p className="note">{directions.note}</p> : null}
+      {directions.rows.length > 0 ? (
+        <>
+          <p className="note">Each row compares the recorded effective-update direction of the two named Freshman adapters.</p>
+          <RecordedDirectionTable rows={directions.rows} />
+          <details className="technical">
+            <summary>What do these cosines compare?</summary>
+            <p className="limits">{UPDATE_DIRECTION_HELP}</p>
+          </details>
+        </>
+      ) : null}
+    </>
+  );
+}
+
+function RecordedDirectionTable({ rows }: { rows: PublishedCosine[] }) {
+  return (
+    <table>
+      <thead>
+        <tr>
+          <th>Freshman pair</th>
+          <th>Overall cosine</th>
+          <th>Mean pair cosine</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((row) => (
+          <tr key={`${row.left}-${row.right}`}>
+            <td>{recordedPairLabel(row)}</td>
+            <td data-testid={`recorded-cosine-${row.left}-${row.right}`}>{formatRecorded(row.cosine)}</td>
+            <td>{formatRecorded(row.mean_pair_cosine)}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+function PublishedBookThree({ subjects, published }: { subjects: ResearchSubject[]; published: PublishedResearch | null }) {
+  if (!published) return <p className="note">The published measurement record was not returned.</p>;
+  const base = subjects.find((item) => item.id === "BASE");
+  return (
+    <section className="card">
+      <h3>{RECORDED_RESULTS_LABEL}</h3>
+      <p className="note">These values are the published record ({published.record}, {published.measured_on}). They were not calculated from a file on this computer.</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Subject</th>
+            <th>LoRA rank</th>
+            <th>Alpha</th>
+            <th>Scaling</th>
+            <th>Effective-update magnitude (L2)</th>
+            <th>Relative to matching BASE projections</th>
+            <th>Weight SHA-256</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>BASE</td>
+            <td colSpan={4}>{BASE_RECORDED_NOTE}</td>
+            <td />
+            <td className="hash">{base?.expected_sha256 || "not recorded"}</td>
+          </tr>
+          {published.subjects.map((row) => (
+            <tr key={row.id}>
+              <td>{row.id}</td>
+              <td>{formatRecorded(row.rank)}</td>
+              <td>{formatRecorded(row.lora_alpha)}</td>
+              <td>{formatRecorded(row.scale)}</td>
+              <td data-testid={`recorded-table-${row.id}-magnitude`}>{formatRecorded(row.effective_update_norm)}</td>
+              <td>{formatRecorded(row.relative_to_base)}</td>
+              <td className="hash">{row.weight_sha256}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <details className="technical">
+        <summary>What is the denominator?</summary>
+        <p className="limits">{MATCHING_BASE_PROJECTIONS_HELP}</p>
+      </details>
+      <RecordedDirectionBlock directions={{ rows: published.chapter_five_cosines, note: "No direction comparison is recorded for F6 or for BASE." }} />
+    </section>
   );
 }
 
@@ -338,6 +525,10 @@ function QwenResearch({ apiBase, tab }: { apiBase: string; tab: WorkspaceTab }) 
       tab={tab}
       hashes={qwenHash}
     >
+      <section className="card">
+        <h3>{RECORDED_RESULTS_LABEL}</h3>
+        <p className="note">{QWEN_RECORDED_NOTE}</p>
+      </section>
       {work ? <WorkProgress label={work} /> : null}
       {error ? <p className="error">{error}</p> : null}
       {tab === "overview" ? (
@@ -354,6 +545,12 @@ function QwenResearch({ apiBase, tab }: { apiBase: string; tab: WorkspaceTab }) 
           <QwenSources update={saved?.update ?? null} />
         </section>
       ) : null}
+      {tab === "checkpoint" && !adapterPath && !work ? (
+        <section className="card">
+          <h3>Inspect Local Checkpoint</h3>
+          <p className="note">{CHECKPOINT_MISSING}</p>
+        </section>
+      ) : null}
       {tab === "checkpoint" && adapterPath ? (
         <CheckpointInspector
           apiBase={apiBase}
@@ -362,6 +559,7 @@ function QwenResearch({ apiBase, tab }: { apiBase: string; tab: WorkspaceTab }) 
           provenance={<p className="meta">Package record {repo || "book-three/qwen"}</p>}
         />
       ) : null}
+      {tab === "magnitudes" && !adapterPath && !work ? <p className="note">{CHECKPOINT_MISSING}</p> : null}
       {tab === "magnitudes" && adapterPath ? (
         <CheckpointInspector
           apiBase={apiBase}
@@ -602,25 +800,30 @@ function WeightsPanel({
       {error ? <p className="error">{error}</p> : null}
       {directionError ? <p className="error">{directionError}</p> : null}
       {subject.location && mode === "magnitudes" ? (
-        <CheckpointInspector
-          apiBase={apiBase}
-          path={subject.location}
-          title={`${subject.id} — ${subject.artifact_label}`}
-          onMeasured={(result) => {
-            if (result.stats) setStats(result.stats);
-            if (result.update) setUpdates((current) => ({ ...current, [subject.id]: result.update as EffectiveUpdateReport }));
-          }}
-        />
+        <>
+          <h3>Newly calculated measurement</h3>
+          <p className="note">This measurement is calculated from the checkpoint on this computer. It is separate from the recorded research results.</p>
+          <CheckpointInspector
+            apiBase={apiBase}
+            path={subject.location}
+            title={`${subject.id} — ${subject.artifact_label}`}
+            onMeasured={(result) => {
+              if (result.stats) setStats(result.stats);
+              if (result.update) setUpdates((current) => ({ ...current, [subject.id]: result.update as EffectiveUpdateReport }));
+            }}
+          />
+        </>
       ) : null}
+      {mode === "magnitudes" && !subject.location ? <p className="note">{CHECKPOINT_MISSING}</p> : null}
       <div className="row">
-        <button type="button" disabled={loading} onClick={() => void compareDirections()}>
+        <button type="button" disabled={loading || !subject.location} onClick={() => void compareDirections()}>
           {alignment ? "Compare directions again" : "Compare directions"}
         </button>
       </div>
-      <p className="note">Direction comparison runs only after this button. It uses the same effective-update measurement as the Checkpoint Inspector.</p>
+      <p className="note">Compare directions calculates a new comparison from local checkpoints. It does not replace the recorded research results.</p>
       {mode === "directions" ? <DirectionComparison alignment={alignment} /> : null}
       {mode === "findings" ? <FindingsView subjects={subjects} updates={updates} alignment={alignment} /> : null}
-      {mode === "magnitudes" ? <MeasuredCheckpointCard subject={subject} stats={stats} update={own} updates={updates} /> : null}
+      {mode === "magnitudes" && subject.location ? <MeasuredCheckpointCard subject={subject} stats={stats} update={own} updates={updates} /> : null}
       {mode === "magnitudes" && own ? (
         <div className="facts">
           <div>
@@ -1109,9 +1312,13 @@ function MeasuredCheckpointCard({
         <Field label="Record" value={subject.status} />
         <Field label="Full student checkpoint" value={subject.full_student_label} />
       </div>
-      <p className="note">
-        The stored-weight statistics and the effective update below were measured on this adapter. Relative magnitude also uses the verified BASE weights.
-      </p>
+      {stats || update ? (
+        <p className="note">
+          The stored-weight statistics and the effective update below were measured on this adapter. Relative magnitude also uses the verified BASE weights. This is a newly calculated measurement. It is separate from the recorded research results.
+        </p>
+      ) : (
+        <p className="note">No newly calculated measurement is shown yet.</p>
+      )}
       {sameFile ? null : <p className="error">The stored-weight measurement and the effective-update measurement named different fingerprints.</p>}
       <details className="technical">
         <summary>File path</summary>

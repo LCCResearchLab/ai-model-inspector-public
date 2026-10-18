@@ -5,6 +5,7 @@
  * Client for the local Inspector API.
  * The web console calls these functions. Scientific measurements stay in the Python engine.
  */
+import type { PublishedResearch } from "./publishedResults";
 export const INSPECTOR_PORT = "8810";
 export const DEFAULT_API_BASE = `http://127.0.0.1:${INSPECTOR_PORT}`;
 
@@ -1176,13 +1177,19 @@ export type ResearchFingerprint = {
   full_student_checkpoint: string;
 };
 
-export async function listFreshmanResearch(apiBase: string): Promise<{ ok: true; limits: string; subjects: ResearchSubject[] } | CheckpointError> {
+export async function listFreshmanResearch(apiBase: string): Promise<{ ok: true; limits: string; subjects: ResearchSubject[]; published: PublishedResearch | null } | CheckpointError> {
   const base = trimBase(apiBase);
   try {
     const res = await fetch(`${base}/research/book-three/freshman`);
     const data = await readJson(res);
     if (!res.ok || data.ok !== true) return asError(data, res.status);
-    return data as { ok: true; limits: string; subjects: ResearchSubject[] };
+    const published = data.published;
+    return {
+      ok: true,
+      limits: String(data.limits || ""),
+      subjects: data.subjects as ResearchSubject[],
+      published: published && typeof published === "object" ? published as PublishedResearch : null,
+    };
   } catch (error) {
     const message = error instanceof Error ? error.message : "The Inspector API did not respond.";
     return { ok: false, error: "unreachable", message };

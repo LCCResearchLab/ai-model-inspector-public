@@ -124,6 +124,16 @@ The controller credential is not an API key. It is created on this computer for 
 
 The Inspector API and the controller listen on `127.0.0.1` only.
 
+## Books
+
+Books shows the published research results without requiring the model files.
+
+Book One and Book Two do not include a measurement record. Book Three includes the Freshman record: LoRA rank, alpha, scaling, effective-update magnitude, relative magnitude, weight SHA-256, and the Chapter 5 direction comparisons. Those values are labeled Recorded Research Results. They are read from `inspector-engine/research/freshman_validation.json` and the Freshman registry. They are not calculated from a checkpoint.
+
+Relative magnitude is the effective-update magnitude divided by the combined Frobenius norm of the 96 BASE attention projection matrices that correspond to the LoRA updates: Q, K, V, and O across 24 transformer layers. That denominator is not the norm of the entire BASE model. Each Chapter 5 comparison names the two Freshman adapters, such as F5-1 compared with F5-2.
+
+Inspect Local Checkpoint calculates a new measurement when the original checkpoint files are on this computer. If a file is missing, the page says so and the recorded results stay visible. The Qwen adapter has no recorded measurement in this distribution. The base model named by the Freshman record is HuggingFaceTB/SmolLM2-1.7B-Instruct. This repository does not include that model's weights.
+
 ## Ports
 
 | Service | Address |

@@ -17,7 +17,19 @@ from inspector_engine.weight_statistics import measure_weight_statistics
 
 ENGINE_DIR = Path(__file__).resolve().parent.parent
 REGISTRY_FILE = ENGINE_DIR / "research" / "book_three_freshman.json"
+VALIDATION_FILE = ENGINE_DIR / "research" / "freshman_validation.json"
 ROOT_FILE = ENGINE_DIR / "research_root.txt"
+_PUBLISHED_SUBJECT_KEYS = (
+    "id",
+    "weight_sha256",
+    "rank",
+    "lora_alpha",
+    "scale",
+    "pair_count",
+    "effective_update_norm",
+    "relative_to_base",
+)
+_PUBLISHED_COSINE_KEYS = ("left", "right", "cosine", "mean_pair_cosine")
 
 ARTIFACT_LABELS = {
     "base_weights": "Starting model weights",
@@ -59,6 +71,38 @@ def list_freshman(*, registry: Path | None = None, root: Path | None = None, con
         "research_root": str(resolved_root) if resolved_root is not None else None,
         "root_status": root_status,
         "subjects": subjects,
+        "published": published_research_results(),
+    }
+
+
+def published_research_results() -> dict:
+    """Return the Book Three record. This read does not open a checkpoint."""
+    try:
+        document = json.loads(VALIDATION_FILE.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise RegistryError("record_unreadable", "The published Freshman measurement record cannot be read.", 500) from exc
+    if not isinstance(document, dict):
+        raise RegistryError("record_unreadable", "The published Freshman measurement record is not a document.", 500)
+    subjects = document.get("subjects")
+    cosines = document.get("chapter_five_cosines")
+    if not isinstance(subjects, list) or not isinstance(cosines, list):
+        raise RegistryError("record_unreadable", "The published Freshman measurement record is incomplete.", 500)
+    published_subjects = []
+    for row in subjects:
+        if not isinstance(row, dict) or any(key not in row for key in _PUBLISHED_SUBJECT_KEYS):
+            raise RegistryError("record_unreadable", "A published Freshman subject is incomplete.", 500)
+        published_subjects.append({key: row[key] for key in _PUBLISHED_SUBJECT_KEYS})
+    published_cosines = []
+    for row in cosines:
+        if not isinstance(row, dict) or any(key not in row for key in _PUBLISHED_COSINE_KEYS):
+            raise RegistryError("record_unreadable", "A published Chapter 5 comparison is incomplete.", 500)
+        published_cosines.append({key: row[key] for key in _PUBLISHED_COSINE_KEYS})
+    return {
+        "label": "Recorded Research Results",
+        "record": document.get("record"),
+        "measured_on": document.get("measured_on"),
+        "subjects": published_subjects,
+        "chapter_five_cosines": published_cosines,
     }
 
 
