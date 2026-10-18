@@ -7,7 +7,8 @@ Project: From Document to Evidence
 
 Release candidate: 1.0.0
 Status: not tagged and not published
-Pre-release checkpoint: `ccad4c7247c9f6a489f56193a68120913bddbaa1`
+Pre-release checkpoint: `d1c3582ff196b956725b021bcfc2f8a164946024`
+Reported software version: 1.0.0. The API, the measurement engine, and the web package use this version.
 
 This file describes the public source distribution. The operative license is the root `LICENSE`: Apache License, Version 2.0, copyright 2026 LCC Research Lab.
 

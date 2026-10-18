@@ -5,7 +5,7 @@ Project: From Document to Evidence
 
 # AI Model Inspector
 
-**Version:** 0.1.0
+**Version:** 1.0.0
 
 This package is the public source distribution. It does not include model weights. The Book Three Freshman validation record lists the published measurement values and checkpoint hashes. The original research configurations stay in the private archive. A Safetensors file you already have can be inspected when it sits in a configured directory. The Qwen adapter and the Freshman adapter weights are not included; each screen says so when the file is absent.
 
