@@ -104,6 +104,26 @@ A gated or private repository can use a Hugging Face token. The API process uses
 
 Cloud Models reads public model metadata from the provider for the account whose key is saved. Those requests leave your computer. They do not run inference, chat, or training, and they do not read model weights. Windows and Linux do not have a credential store in the Inspector yet. Those platforms are not supported for this release.
 
+### API Key Security
+
+AI Model Inspector can store credentials for OpenAI, Anthropic, Google Gemini, and Hugging Face. On this macOS release, a credential saved from the console goes into the macOS Keychain. The operating system holds that entry. The Inspector does not write the saved key into a project file, and it does not send keys to LCC Research Lab.
+
+| Credential | Purpose | Storage |
+|---|---|---|
+| OpenAI API key | OpenAI model discovery | macOS Keychain |
+| Anthropic API key | Anthropic model discovery | macOS Keychain |
+| Google Gemini API key | Gemini model discovery | macOS Keychain |
+| Hugging Face token | Access to gated or private repositories, and the Hugging Face connection test | macOS Keychain, unless `INSPECTOR_HF_TOKEN` is set for the API process |
+| Controller credential | Start and stop the local API | A file created in `.inspector-runtime/`, readable only by the account running the Inspector |
+
+`INSPECTOR_HF_TOKEN` applies only to Hugging Face. When it is set, Hugging Face requests use that environment value and do not read the Keychain token. OpenAI, Anthropic, and Gemini keys are never taken from that variable. Each provider has its own Keychain entry. Removing one does not remove the others. Removing the Hugging Face Keychain entry does not unset `INSPECTOR_HF_TOKEN`.
+
+The local API retrieves a saved key when you test it or ask for that provider’s model list. The key is sent only to that provider, over HTTPS, and it is not placed in the URL. A saved key is not shown in the web console and is not included in the API’s replies. You can remove a saved credential from the Hugging Face or Cloud Models screen. Saving, testing, removing, and listing credentials requires the local controller credential and a browser on this computer.
+
+The controller credential is not an API key. It is created on this computer for Start and Stop. It is not sent to Hugging Face or to a cloud provider.
+
+The Inspector API and the controller listen on `127.0.0.1` only.
+
 ## Ports
 
 | Service | Address |
