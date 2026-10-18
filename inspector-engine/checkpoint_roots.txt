@@ -1,5 +1,5 @@
 # Directories the Checkpoint Inspector may read.
 # Relative paths are resolved from inspector-engine/.
-# Add an absolute directory to inspect checkpoints stored elsewhere on this Mac.
+# Add an absolute directory to inspect checkpoints stored elsewhere on this computer.
 checkpoints
 distribution/book-three/freshman
