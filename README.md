@@ -3,7 +3,19 @@ Authors: LCC Research Lab
 Project: From Document to Evidence
 -->
 
+<p align="center">
+  <a href="https://lccresearchlab.com">
+    <img src="docs/lcc-research-logo.png" alt="LCC Research Lab" width="128">
+  </a>
+</p>
+
 # AI Model Inspector
+
+Free, open-source scientific instrument from [LCC Research Lab](https://lccresearchlab.com) for examining local model weights and LoRA updates.
+
+The software measures. The [*Adventures in AI*](https://lccresearchlab.com/books.html) books explain the experiments, methodology, and findings. The Inspector remains free: it does not require a book purchase or an account.
+
+The instrument and the laboratory's publications: [lccresearchlab.com/ai-model-inspector](https://lccresearchlab.com/ai-model-inspector.html)
 
 **Version:** 1.0.0
 
@@ -12,6 +24,12 @@ This package is the public source distribution. It does not include model weight
 **Python:** 3.12 or 3.13. Python 3.14 can run the current suite and reports deprecation warnings from Starlette and FastAPI. Those warnings are not measurement failures.
 
 AI Model Inspector is an independent measurement instrument. The books supply its first research datasets, and a later book can be added without renaming the instrument. Version 1.0 is a desktop web console backed by a local Python measurement engine. Model files and measurements stay on your computer. The API listens on `127.0.0.1` only. `INSPECTOR_HOST` cannot move it onto the local network.
+
+## Research
+
+AI Model Inspector accompanies *Adventures in AI*, the book series from LCC Research Lab. The instrument examines model weights and LoRA updates on your computer. The books document the reproducible experiments behind those measurements: how the evidence was gathered, how it was interpreted, and what the internal measurements showed.
+
+This package does not include model weights. Recorded research results that ship with the instrument can be read without the original checkpoints. The publications are available at [lccresearchlab.com](https://lccresearchlab.com).
 
 ## Platforms
 
