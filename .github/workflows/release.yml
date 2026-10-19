@@ -1,0 +1,138 @@
+name: Publish release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version, such as 1.1.0. v1.0.0 is refused."
+        required: true
+        type: string
+      commit:
+        description: "Full 40-character SHA of the reviewed public commit."
+        required: true
+        type: string
+      confirm:
+        description: "Type publish to confirm this release."
+        required: true
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: publish-release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish the reviewed tag
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: release
+    permissions:
+      contents: write
+    steps:
+      - name: Create the GitHub release from the existing tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          SOURCE_REF: ${{ github.ref }}
+          EVENT_NAME: ${{ github.event_name }}
+          VERSION: ${{ inputs.version }}
+          EXPECTED: ${{ inputs.commit }}
+          CONFIRM: ${{ inputs.confirm }}
+        run: |
+          set -euo pipefail
+
+          if [ "$EVENT_NAME" != "workflow_dispatch" ]; then
+            echo "This workflow starts only from a manual run."
+            exit 1
+          fi
+          if [ "$SOURCE_REF" != "refs/heads/main" ]; then
+            echo "This workflow runs only from the public main branch."
+            exit 1
+          fi
+          if [ "$REPO" != "LCCResearchLab/ai-model-inspector-public" ]; then
+            echo "This workflow publishes only the public distribution repository."
+            exit 1
+          fi
+          if [ "$CONFIRM" != "publish" ]; then
+            echo "Confirmation must be the word publish."
+            exit 1
+          fi
+          if ! printf '%s' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "Version must look like 1.2.3, without a leading v."
+            exit 1
+          fi
+          if [ "$VERSION" = "1.0.0" ]; then
+            echo "v1.0.0 is frozen. This workflow will not change it."
+            exit 1
+          fi
+          if ! printf '%s' "$EXPECTED" | grep -Eq '^[0-9a-f]{40}$'; then
+            echo "Commit must be a full 40-character lowercase SHA."
+            exit 1
+          fi
+
+          TAG="v${VERSION}"
+
+          REF_JSON=$(gh api "repos/${REPO}/git/ref/tags/${TAG}") || exit 1
+          REF_TYPE=$(printf '%s' "$REF_JSON" | jq -r '.object.type')
+          REF_SHA=$(printf '%s' "$REF_JSON" | jq -r '.object.sha')
+          if [ "$REF_TYPE" != "tag" ]; then
+            echo "The tag must already exist and must be annotated. This workflow does not create tags."
+            exit 1
+          fi
+
+          TAG_JSON=$(gh api "repos/${REPO}/git/tags/${REF_SHA}") || exit 1
+          OBJECT_TYPE=$(printf '%s' "$TAG_JSON" | jq -r '.object.type')
+          COMMIT=$(printf '%s' "$TAG_JSON" | jq -r '.object.sha')
+          TAGGER=$(printf '%s' "$TAG_JSON" | jq -r '.tagger.name')
+          TAGGER_EMAIL=$(printf '%s' "$TAG_JSON" | jq -r '.tagger.email')
+          if [ "$OBJECT_TYPE" != "commit" ] || [ "$COMMIT" != "$EXPECTED" ]; then
+            echo "The tag does not point at the approved commit."
+            exit 1
+          fi
+          if [ "$TAGGER" != "LCC Research Lab" ] || [ "$TAGGER_EMAIL" != "lccresearchlab@gmail.com" ]; then
+            echo "The annotated tag must name LCC Research Lab as its tagger."
+            exit 1
+          fi
+
+          COMPARE=$(gh api "repos/${REPO}/compare/${COMMIT}...main") || exit 1
+          STATUS=$(printf '%s' "$COMPARE" | jq -r '.status')
+          BEHIND=$(printf '%s' "$COMPARE" | jq -r '.behind_by')
+          if [ "$STATUS" != "identical" ] && { [ "$STATUS" != "ahead" ] || [ "$BEHIND" != "0" ]; }; then
+            echo "The approved commit is not contained in main."
+            exit 1
+          fi
+
+          if gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1; then
+            echo "A release for ${TAG} already exists. This workflow will not replace it."
+            exit 1
+          fi
+
+          NOTES=$(mktemp)
+          if ! gh api -H "Accept: application/vnd.github.raw" \
+            "repos/${REPO}/contents/docs/release/${TAG}.md?ref=${COMMIT}" > "$NOTES"; then
+            echo "docs/release/${TAG}.md is missing from the approved commit."
+            rm -f "$NOTES"
+            exit 1
+          fi
+          if [ ! -s "$NOTES" ]; then
+            echo "docs/release/${TAG}.md is missing from the approved commit."
+            rm -f "$NOTES"
+            exit 1
+          fi
+
+          gh release create "$TAG" \
+            --repo "$REPO" \
+            --verify-tag \
+            --target "$COMMIT" \
+            --title "AI Model Inspector ${TAG}" \
+            --notes-file "$NOTES"
+          rm -f "$NOTES"
+
+          RELEASE_TAG=$(gh release view "$TAG" --repo "$REPO" --json tagName --jq .tagName)
+          if [ "$RELEASE_TAG" != "$TAG" ]; then
+            echo "The release did not record the approved tag."
+            exit 1
+          fi
+          echo "Published ${TAG} from ${COMMIT}."
