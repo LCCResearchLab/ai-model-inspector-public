@@ -17,11 +17,13 @@ The software measures. The [*Adventures in AI*](https://lccresearchlab.com/books
 
 The instrument and the laboratory's publications: [lccresearchlab.com/ai-model-inspector](https://lccresearchlab.com/ai-model-inspector.html)
 
-**Version:** 1.0.0
+**Version:** 1.0.1
 
 This package is the public source distribution. It does not include model weights. The Book Three Freshman validation record lists the published measurement values and checkpoint hashes. The original research configurations stay in the private archive. A Safetensors file you already have can be inspected when it sits in a configured directory. The Qwen adapter and the Freshman adapter weights are not included; each screen says so when the file is absent.
 
 **Python:** 3.12 or 3.13. Python 3.14 can run the current suite and reports deprecation warnings from Starlette and FastAPI. Those warnings are not measurement failures.
+
+**Node.js:** A current Node.js LTS release with `npm` (tested with Node.js 22). The web console installs from the committed `web/package-lock.json`.
 
 AI Model Inspector is an independent measurement instrument. The books supply its first research datasets, and a later book can be added without renaming the instrument. Version 1.0 is a desktop web console backed by a local Python measurement engine. Model files and measurements stay on your computer. The API listens on `127.0.0.1` only. `INSPECTOR_HOST` cannot move it onto the local network.
 
@@ -45,29 +47,34 @@ Commands below are relative to the project directory after a fresh copy of this 
 
 ## Running AI Model Inspector locally
 
-Install the prerequisites for a new copy, then start the services:
+Use one terminal. Commands are relative to the project directory after you unzip the named release asset
+`ai-model-inspector-1.0.1-macos-source.zip` (or after you clone this repository).
 
-1. Python 3.12 or 3.13.
-2. Node.js, for the web console.
-3. From the project directory, install and start the API:
-
-```bash
-./start-inspector-api.sh
-```
-
-4. Install and build the web console:
+1. Install Python 3.12 or 3.13, and Node.js with `npm`.
+2. Build the web console from the lockfile:
 
 ```bash
 cd web
-npm install
+npm ci
 npm run build
 cd ..
+```
+
+3. Start the Inspector API (creates `inspector-engine/.venv` on first run, installs `inspector-engine/requirements.txt`, and serves the built console):
+
+```bash
 ./inspector-server.sh start
 ```
 
-Open `http://127.0.0.1:8810` in your browser. If the API was started on another port, open that port instead.
+4. Optional — enable Start and Stop in the console (listens on `127.0.0.1:8811` only):
 
-For console development, `npm run dev` serves the page at `http://127.0.0.1:5173`. Open that address in your browser after starting the web console.
+```bash
+./inspector-controller.sh start
+```
+
+5. Open `http://127.0.0.1:8810` in your browser. If you started the API on another port, open that port instead.
+
+For console development, `npm run dev` (from `web/`) serves the page at `http://127.0.0.1:5173`. Start the API first, then open that address.
 
 The application communicates with two local services:
 
@@ -86,11 +93,11 @@ Hugging Face discovery and downloads, and cloud-provider model listings, do cont
 | `inspector-engine/` | Python API. Default port 8810. |
 | `inspector-server.sh` | Start, stop, restart, and check the API. |
 | `inspector-controller.sh` | Keep the local server controller available on port 8811. |
-| `start-inspector-api.sh` | Create the API environment, install dependencies, and start the server in the foreground. |
+| `start-inspector-api.sh` | Foreground / debug only: create the API environment and start uvicorn in this terminal. Prefer `inspector-server.sh start` for normal use. |
 
 ## Fresh installation
 
-`./start-inspector-api.sh` creates `inspector-engine/.venv` when that environment is absent, installs the packages in `inspector-engine/requirements.txt`, and starts the API. An existing environment is reused.
+`./inspector-server.sh start` creates `inspector-engine/.venv` when that environment is absent, installs the packages in `inspector-engine/requirements.txt`, and starts the API in the background. An existing environment is reused. Use `./start-inspector-api.sh` only when you want the API attached to the current terminal.
 
 The API listens at `http://127.0.0.1:8810` unless another port is selected. The host is always `127.0.0.1`. Health is `GET /health`, and the response includes the listening port. Checkpoint inspection is `POST /inspect/checkpoint` with a JSON body `{ "path": "/absolute/path/file.safetensors" }`. The file must be a `.safetensors` file inside a directory listed in `inspector-engine/checkpoint_roots.txt`, or inside `inspector-engine/library/` or `inspector-engine/bundled/`. A path cannot leave those directories through `..` or a symlink. The filesystem root, the home directory, and other broad directories are not accepted as inspection roots.
 

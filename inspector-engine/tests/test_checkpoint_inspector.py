@@ -50,7 +50,7 @@ def test_inventory_reports_shape_dtype_and_count(tmp_path: Path) -> None:
     ]
     assert report["total_stored_parameters"] == 6
     assert report["configuration"]["source"] == "unavailable"
-    assert report["engine_version"] == "1.0.0"
+    assert report["engine_version"] == "1.0.1"
 
 
 def test_lora_metadata_is_not_described_as_a_full_model(tmp_path: Path) -> None:

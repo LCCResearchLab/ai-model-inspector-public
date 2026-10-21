@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Release version, such as 1.1.0. v1.0.0 is refused."
+        description: "Release version, such as 1.0.1. v1.0.0 is refused."
         required: true
         type: string
       commit:
@@ -26,12 +26,18 @@ jobs:
   publish:
     name: Publish the reviewed tag
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     environment: release
     permissions:
       contents: write
     steps:
-      - name: Create the GitHub release from the existing tag
+      - name: Check out the approved commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.commit }}
+          fetch-depth: 0
+
+      - name: Create the GitHub release with the named source ZIP
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
@@ -72,7 +78,15 @@ jobs:
             exit 1
           fi
 
+          HEAD_SHA="$(git rev-parse HEAD)"
+          if [ "$HEAD_SHA" != "$EXPECTED" ]; then
+            echo "Checked-out commit ${HEAD_SHA} does not match the approved commit."
+            exit 1
+          fi
+
           TAG="v${VERSION}"
+          ASSET="ai-model-inspector-${VERSION}-macos-source.zip"
+          SUM="${ASSET}.sha256"
 
           REF_JSON=$(gh api "repos/${REPO}/git/ref/tags/${TAG}") || exit 1
           REF_TYPE=$(printf '%s' "$REF_JSON" | jq -r '.object.type')
@@ -122,12 +136,25 @@ jobs:
             exit 1
           fi
 
+          chmod +x scripts/pack_public_source_zip.sh
+          ./scripts/pack_public_source_zip.sh "$VERSION" --ref "$COMMIT"
+
+          ZIP_PATH=".release-build/${ASSET}"
+          SHA_PATH=".release-build/${SUM}"
+          if [ ! -f "$ZIP_PATH" ] || [ ! -f "$SHA_PATH" ]; then
+            echo "Packaging did not produce ${ASSET} and ${SUM}."
+            rm -f "$NOTES"
+            exit 1
+          fi
+
           gh release create "$TAG" \
             --repo "$REPO" \
             --verify-tag \
             --target "$COMMIT" \
             --title "AI Model Inspector ${TAG}" \
-            --notes-file "$NOTES"
+            --notes-file "$NOTES" \
+            "$ZIP_PATH" \
+            "$SHA_PATH"
           rm -f "$NOTES"
 
           RELEASE_TAG=$(gh release view "$TAG" --repo "$REPO" --json tagName --jq .tagName)
@@ -135,4 +162,16 @@ jobs:
             echo "The release did not record the approved tag."
             exit 1
           fi
-          echo "Published ${TAG} from ${COMMIT}."
+
+          GOT_FILE=$(mktemp)
+          EXP_FILE=$(mktemp)
+          gh release view "$TAG" --repo "$REPO" --json assets --jq '[.assets[].name] | sort | .[]' >"$GOT_FILE"
+          printf '%s\n' "$ASSET" "$SUM" | sort >"$EXP_FILE"
+          if ! diff -u "$EXP_FILE" "$GOT_FILE"; then
+            echo "Release assets are not exactly ${ASSET} and ${SUM}."
+            rm -f "$GOT_FILE" "$EXP_FILE"
+            exit 1
+          fi
+          rm -f "$GOT_FILE" "$EXP_FILE"
+
+          echo "Published ${TAG} from ${COMMIT} with ${ASSET}."

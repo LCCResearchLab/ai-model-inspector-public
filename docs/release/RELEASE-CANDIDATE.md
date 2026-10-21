@@ -5,20 +5,17 @@ Project: From Document to Evidence
 
 # AI Model Inspector release candidate
 
-Release candidate: 1.0.0
-Status: not tagged and not published
-Pre-release checkpoint: `d1c3582ff196b956725b021bcfc2f8a164946024`
-Reported software version: 1.0.0. The API, the measurement engine, and the web package use this version.
+Release candidate: **1.0.1**  
+Status: prepared for review — **not tagged and not published** until separate approval.
 
-This file describes the public source distribution. The operative license is the root `LICENSE`: Apache License, Version 2.0, copyright 2026 LCC Research Lab.
+Reported software version: 1.0.1. The API, the measurement engine, and the web package use this version.
 
-Scientific validation is recorded in `inspector-engine/research/freshman_validation.json`:
+The counted public distribution is the named ZIP produced by `scripts/pack_public_source_zip.sh`:
 
-- Freshman F5-1
-- Freshman F5-2
-- Freshman F5-3
-- Freshman F6
+`ai-model-inspector-1.0.1-macos-source.zip`
 
-The measurement formulas in `weight_statistics.py` and `effective_lora.py` are unchanged. The validation record lists the published checkpoint hashes and measurement values. Packaged adapter settings use the relative base path `../BASE`. This distribution does not include model weights. A Safetensors file supplied by the user can be inspected when it is in a configured directory.
+Release notes for the GitHub release body: `docs/release/v1.0.1.md`.
 
-`v1.0.0` has not been tagged. This repository has not been published.
+**Frozen:** `v1.0.0` remains unchanged on GitHub. Do not attach assets to it and do not republish it.
+
+This file describes packaging status only. Scientific validation remains in `inspector-engine/research/freshman_validation.json`. Measurement formulas are unchanged for this packaging release.

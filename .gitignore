@@ -18,6 +18,7 @@ htmlcov/
 .venv/
 venv/
 .inspector-runtime/
+.release-build/
 inspector-engine/library/**
 !inspector-engine/library/.gitkeep
 

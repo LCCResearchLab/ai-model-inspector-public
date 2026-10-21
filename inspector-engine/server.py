@@ -51,7 +51,7 @@ from inspector_engine.research_registry import (
 )
 
 DEFAULT_PORT = 8810
-API_VERSION = "1.0.0"
+API_VERSION = "1.0.1"
 LOOPBACK_HOSTS = {"127.0.0.1", "localhost", "::1"}
 
 
